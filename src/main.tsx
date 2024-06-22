@@ -6,7 +6,8 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./layout.tsx";
 import { UserProvider } from "./userContext.tsx";
 import AuthPage from "./Auth.tsx";
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "./components/theme-provider.tsx";
 
 const router = createBrowserRouter([
   {
@@ -16,16 +17,18 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <AuthPage />,
-  }
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <UserProvider>
-      <Layout>
-        <RouterProvider router={router} />
-      </Layout>
-    </UserProvider>
-    <Toaster/>
+    <ThemeProvider defaultTheme="dark">
+      <UserProvider>
+        <Layout>
+          <RouterProvider router={router} />
+        </Layout>
+      </UserProvider>
+      <Toaster />
+    </ThemeProvider>
   </React.StrictMode>
 );

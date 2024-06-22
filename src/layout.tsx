@@ -11,8 +11,8 @@ interface RootLayoutProps {
 
 export default function Layout({ children }: RootLayoutProps) {
   return (
-    <div className="relative flex min-h-screen flex-col bg-background">
-      <Navbar/>
+    <div className="">
+      <Navbar />
       {children}
     </div>
   );

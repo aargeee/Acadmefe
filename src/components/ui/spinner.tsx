@@ -6,7 +6,14 @@ interface SpinnerIconAttributes {
 
 export const Spinner: React.FC<SpinnerIconAttributes> = ({ className = '' }: SpinnerIconAttributes) => {
     return (
-        <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className={className}>
+        <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            className={`text-white ${className}`}
+            fill="currentColor"
+        >
             <style>
                 {`.spinner_P7sC { transform-origin: center; animation: spinner_svv2 .75s infinite linear; }
                 @keyframes spinner_svv2 { 100% { transform: rotate(360deg); } }`}

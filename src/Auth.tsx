@@ -1,3 +1,4 @@
+import loginImg from "@/assets/image.png"
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +18,7 @@ import { useToast } from "./components/ui/use-toast";
 import { ToastAction } from "./components/ui/toast";
 import { Navigate, useNavigate } from "react-router-dom";
 import { ACAD_ME_URL } from "./env";
+
 
 interface SignupFieldsProps {
   info: {
@@ -246,6 +248,7 @@ const LoginCard = () => {
         <CardDescription>Log in to your account.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
+        <img src={loginImg} alt="login-image" className="rounded-md" />
         <div className="space-y-1">
           <Label htmlFor="username">Username</Label>
           <Input
