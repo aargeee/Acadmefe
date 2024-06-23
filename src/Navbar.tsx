@@ -110,7 +110,7 @@ const Navbar = () => {
                   <Popover>
                     <PopoverTrigger>
                       <Avatar>
-                        <AvatarImage src="https://upload.wikimedia.org/wikipedia/en/1/1b/NPC_wojak_meme.png" />
+                        <AvatarImage src="https://st3.depositphotos.com/9998432/13335/v/450/depositphotos_133351928-stock-illustration-default-placeholder-man-and-woman.jpg" />
                         <AvatarFallback>RG</AvatarFallback>
                       </Avatar>
                     </PopoverTrigger>

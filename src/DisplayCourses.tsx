@@ -154,7 +154,6 @@ export function DisplayCourses() {
             <CardHeader>
               <CardTitle>{category.name}</CardTitle>
               <CardDescription>
-                Make changes to your account here. Click save when you're done.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
