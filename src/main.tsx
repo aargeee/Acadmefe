@@ -8,6 +8,8 @@ import { UserProvider } from "./userContext.tsx";
 import AuthPage from "./Auth.tsx";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "./components/theme-provider.tsx";
+import ErrorPage from "./ErrorPage.tsx";
+import CoursePage from "./coursepage.tsx";
 
 const router = createBrowserRouter([
   {
@@ -17,7 +19,13 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <AuthPage />,
+    errorElement: <ErrorPage />
   },
+  {
+    path: "/courses/:id",
+    element: <CoursePage />,
+    errorElement: <ErrorPage />
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
