@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ACAD_ME_URL } from "./env";
 import { useToast } from "./components/ui/use-toast";
-import { UUID } from "crypto";
 import {
   Card,
   CardContent,
@@ -31,8 +30,15 @@ import {
 import { ScrollArea } from "./components/ui/scroll-area";
 import DOMPurify from "dompurify";
 import SafeHTML from "./safe-html";
+import { Badge } from "./components/ui/badge";
+import { useUser } from "./userContext";
+import { UUID } from "crypto";
 
 interface Tutor {
+  tutor: TutorDetail;
+}
+
+interface TutorDetail {
   id: UUID;
   username: string;
   first_name: string;
@@ -43,6 +49,7 @@ interface Content {
   id: UUID;
   name: string;
   position: number;
+  completed: boolean;
 }
 
 interface Chapter {
@@ -60,6 +67,7 @@ interface CourseData {
   chapters: Chapter[];
   tutors: Tutor[];
   enrolled_count: number;
+  enrolled: boolean;
 }
 
 interface ContentViewProps {
@@ -78,13 +86,16 @@ interface ContentDetail {
 const ContentView = ({ contentId }: ContentViewProps) => {
   const { toast } = useToast();
   const [contentData, setContentData] = useState<ContentDetail | null>(null);
+  const { user } = useUser();
 
   useEffect(() => {
     (async () => {
       try {
-        const response = await fetch(
-          `${ACAD_ME_URL}/courses/content/${contentId}`
-        );
+        const response = await fetch(`${ACAD_ME_URL}/courses/content/${contentId}`, {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        });
         if (!response.ok) throw new Error("Failed to fetch content.");
         const data = await response.json();
         data.data.content = DOMPurify.sanitize(data.data.content);
@@ -96,7 +107,7 @@ const ContentView = ({ contentId }: ContentViewProps) => {
         });
       }
     })();
-  }, [contentId, toast]);
+  }, [contentId, toast, user]);
 
   if (contentData?.type === "HTML")
     return (
@@ -104,10 +115,11 @@ const ContentView = ({ contentId }: ContentViewProps) => {
         <SafeHTML html={contentData?.content || ""} />
       </ScrollArea>
     );
+
   return (
     <iframe
       className="video w-full h-full"
-      title="Youtube player"
+      title="Video player"
       sandbox="allow-same-origin allow-scripts allow-presentation"
       src={`${contentData?.content}?rel=0&autoplay=1`}
       allowFullScreen
@@ -115,11 +127,15 @@ const ContentView = ({ contentId }: ContentViewProps) => {
   );
 };
 
-const CourseContent = ({ id, name }: Content) => {
+const CourseContent = ({ id, name, completed }: Content) => {
+
+  const {user} = useUser()
+  const {toast} = useToast()
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full">
+        <Button variant={completed ? "default" : "outline"} className="w-full">
           {name}
         </Button>
       </DialogTrigger>
@@ -129,10 +145,30 @@ const CourseContent = ({ id, name }: Content) => {
           <DialogDescription />
         </DialogHeader>
         <div className="h-full w-full">
-          <ContentView contentId={id} />
+          {
+            user ? 
+            <ContentView contentId={id} />:
+            <div>
+              <a href="/login"><Button>Login to view content</Button></a>
+            </div>
+          }
         </div>
-        <DialogFooter>
-          <Button type="submit">Save changes</Button>
+        <DialogFooter className="ml-auto">
+          <Button onClick={async () => {
+            try {
+              const response = await fetch(`${ACAD_ME_URL}/courses/content/${id}/markcomplete`, {
+                headers: {
+                  Authorization: `Bearer ${user?.accessToken}`
+                }
+              })
+              if (!response.ok) throw new Error("Could not mark content complete");
+            } catch (error) {
+              toast({
+                title: error instanceof Error ? error.message : String(error),
+                variant: "destructive",
+              });
+            }
+          }}>Mark Complete</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -140,10 +176,13 @@ const CourseContent = ({ id, name }: Content) => {
 };
 
 const CoursePage = () => {
-  const { id } = useParams<{ id: UUID }>();
+  const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const [courseData, setCourseData] = useState<CourseData | null>(null);
+  const [completedContentIds, setCompletedContentIds] = useState<UUID[]>([]);
   const [isLoading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { user } = useUser();
 
   useEffect(() => {
     (async () => {
@@ -153,6 +192,19 @@ const CoursePage = () => {
         const data = await response.json();
         setCourseData(data.data);
         setLoading(false);
+
+        if (user) {
+          const response = await fetch(`${ACAD_ME_URL}/courses/${id}/content/`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${user.accessToken}`,
+            },
+          });
+          if (!response.ok) throw new Error("Failed to fetch course detail for user");
+          const data = await response.json();
+          setCourseData((prev) => (prev ? { ...prev, enrolled: data.data.enrolled } : null));
+          setCompletedContentIds(data.data.content_id);
+        }
       } catch (error) {
         toast({
           title: error instanceof Error ? error.message : String(error),
@@ -160,7 +212,29 @@ const CoursePage = () => {
         });
       }
     })();
-  }, [id, toast]);
+  }, [id, toast, user]);
+
+  const handleEnroll = async () => {
+    if (!user || !courseData) return;
+    try {
+      const response = await fetch(`${ACAD_ME_URL}/courses/${courseData.id}/enroll/`, {
+        headers: {
+          Authorization: `Bearer ${user.accessToken}`,
+        },
+      });
+      if (!response.ok) throw new Error("Could not enroll learner into course");
+      const updatedData = await response.json();
+      setCourseData((prev) => (prev ? { ...prev, enrolled: updatedData.data.enrolled } : null));
+      toast({
+        title: `Enrolled into ${courseData.name}`,
+      });
+    } catch (error) {
+      toast({
+        title: error instanceof Error ? error.message : String(error),
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isLoading)
     return (
@@ -175,6 +249,17 @@ const CoursePage = () => {
         <CardHeader>
           <CardTitle className="capitalize">{courseData?.name}</CardTitle>
           <CardDescription>{courseData?.description}</CardDescription>
+          <div className="flex justify-between">
+            <div className="flex gap-5">
+              <span>Tutors:</span>
+              {courseData?.tutors.map((tutor, tutidx) => (
+                <Badge key={tutidx}>{tutor.tutor.username}</Badge>
+              ))}
+            </div>
+            <div>
+              <span>Enrolled: {courseData?.enrolled_count}</span>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Accordion type="single" collapsible className="w-full">
@@ -183,7 +268,11 @@ const CoursePage = () => {
                 <AccordionTrigger>{chapter.name}</AccordionTrigger>
                 <AccordionContent className="flex flex-col items-start gap-1">
                   {chapter.content.map((content) => (
-                    <CourseContent key={content.id} {...content} />
+                    <CourseContent
+                      key={content.id}
+                      {...content}
+                      completed={completedContentIds.includes(content.id)}
+                    />
                   ))}
                 </AccordionContent>
               </AccordionItem>
@@ -191,8 +280,26 @@ const CoursePage = () => {
           </Accordion>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline">Cancel</Button>
-          <Button>Deploy</Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              navigate(-1);
+            }}
+          >
+            Back
+          </Button>
+          {user ? (
+            <Button
+              disabled={user.role !== "LEARNER" || courseData?.enrolled}
+              onClick={handleEnroll}
+            >
+              {courseData?.enrolled ? "Enrolled" : "Enroll"}
+            </Button>
+          ) : (
+            <a href="/login">
+              <Button>Login</Button>
+            </a>
+          )}
         </CardFooter>
       </Card>
     </div>

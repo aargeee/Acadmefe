@@ -12,6 +12,10 @@ export interface Courses {
     isLoading?: boolean;
   }
   
+  export interface TTutor {
+    tutor: Tutor;
+  }
+
   export interface Tutor {
     id: string;
     username: string;

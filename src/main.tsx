@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "./components/theme-provider.tsx";
 import ErrorPage from "./ErrorPage.tsx";
 import CoursePage from "./coursepage.tsx";
+import { UserProfile } from "./UserProfile.tsx";
 
 const router = createBrowserRouter([
   {
@@ -25,7 +26,13 @@ const router = createBrowserRouter([
     path: "/courses/:id",
     element: <CoursePage />,
     errorElement: <ErrorPage />
-  }
+  },
+  {
+    path: "/profile/:username",
+    element: <UserProfile />,
+    errorElement: <ErrorPage />
+  },
+  
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

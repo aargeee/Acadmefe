@@ -5,6 +5,7 @@ interface User {
   username: string;
   accessToken: string | null;
   refreshToken: string | null;
+  role: string | null;
 }
 
 interface UserContextType {
@@ -53,6 +54,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         username: username,
         accessToken: data.data?.access_token,
         refreshToken: data.data?.refresh_token,
+        role: data.data?.role,
       };
       localStorage.setItem("user", JSON.stringify(newuser));
       return newuser;
