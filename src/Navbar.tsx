@@ -116,7 +116,7 @@ const Navbar = () => {
                     </PopoverTrigger>
                     <PopoverContent className="cursor-pointer">
                       <a
-                        href="/iam/profile"
+                        href={`/profile/${user.username}`}
                         className="block px-4 py-2 text-sm text-gray-700"
                       >
                         Your Profile
